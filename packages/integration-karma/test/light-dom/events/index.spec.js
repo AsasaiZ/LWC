@@ -115,9 +115,17 @@ describe('shadow container, light child', () => {
             [nodes['x-light-child'], nodes.button, composedPath],
             [nodes['x-shadow-container'].shadowRoot, nodes.button, composedPath],
             [nodes['x-shadow-container'], nodes['x-shadow-container'], composedPath],
-            [document.body, nodes['x-shadow-container'], composedPath],
+            [
+                document.body,
+                process.env.NATIVE_SHADOW ? nodes['x-shadow-container'] : nodes.button,
+                composedPath,
+            ],
             [document.documentElement, nodes['x-shadow-container'], composedPath],
-            [document, nodes['x-shadow-container'], composedPath],
+            [
+                document,
+                process.env.NATIVE_SHADOW ? nodes['x-shadow-container'] : nodes.button,
+                composedPath,
+            ],
             [window, nodes['x-shadow-container'], composedPath],
         ]);
     });
