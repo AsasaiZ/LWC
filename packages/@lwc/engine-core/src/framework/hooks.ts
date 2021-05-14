@@ -41,7 +41,7 @@ function setElementShadowToken(elm: Element, token: string | undefined) {
 function setLightDomScopingTokenIfNecessary(elm: Element, owner: VM) {
     const token = owner.cmpTemplate?.stylesheetTokens?.shadowAttribute;
     if (!isUndefined(token)) {
-        elm.classList.add(token);
+        owner.renderer.getClassList(elm).add(token);
     }
 }
 
