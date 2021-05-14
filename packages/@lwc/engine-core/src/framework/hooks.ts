@@ -38,6 +38,13 @@ function setElementShadowToken(elm: Element, token: string | undefined) {
     (elm as any).$shadowToken$ = token;
 }
 
+function setLightDomScopingTokenIfNecessary(elm: Element, owner: VM) {
+    const token = owner.cmpTemplate?.stylesheetTokens?.shadowAttribute;
+    if (!isUndefined(token)) {
+        elm.classList.add(token);
+    }
+}
+
 export function updateNodeHook(oldVnode: VNode, vnode: VNode) {
     const {
         elm,
@@ -100,10 +107,7 @@ enum LWCDOMMode {
 export function fallbackElmHook(elm: Element, vnode: VElement) {
     const { owner } = vnode;
     if (!hasShadow(owner)) {
-        const token = owner.cmpTemplate?.stylesheetTokens?.shadowAttribute;
-        if (!isUndefined(token)) {
-            elm.classList.add(token);
-        }
+        setLightDomScopingTokenIfNecessary(elm, owner);
     }
     if (isTrue(owner.renderer.syntheticShadow)) {
         const {
@@ -201,10 +205,7 @@ export function createViewModelHook(elm: HTMLElement, vnode: VCustomElement) {
     const { sel, mode, ctor, owner } = vnode;
     const def = getComponentInternalDef(ctor);
     if (!hasShadow(owner)) {
-        const token = owner.cmpTemplate?.stylesheetTokens?.shadowAttribute;
-        if (!isUndefined(token)) {
-            elm.classList.add(token);
-        }
+        setLightDomScopingTokenIfNecessary(elm, owner);
     }
     if (isTrue(owner.renderer.syntheticShadow)) {
         const { shadowAttribute } = owner.context;
