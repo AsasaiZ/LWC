@@ -68,7 +68,9 @@ export default function serialize(result: Result, config: Config): string {
             buffer += `var ${SHADOW_DOM_ENABLED_IDENTIFIER} = false;\n`;
             buffer += `  return ${serializedStyle};\n`;
             buffer += `}\n`;
-            buffer += `stylesheet.$scoped$ = true;\n`; // temporary solution
+            // eslint-disable-next-line lwc-internal/no-invalid-todo
+            // TODO: figure out a better way to mark stylesheets as scoped
+            buffer += `stylesheet.$scoped$ = true;\n`;
         } else {
             // shadow DOM or non-scoped light DOM styles
             buffer += `function stylesheet(${HOST_SELECTOR_IDENTIFIER}, ${SHADOW_SELECTOR_IDENTIFIER}, ${SHADOW_DOM_ENABLED_IDENTIFIER}) {\n`;

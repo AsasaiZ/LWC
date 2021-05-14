@@ -44,8 +44,9 @@ function setLightDomScopingTokenIfNecessary(elm: Element, owner: VM) {
     if (!isUndefined(token) && !isUndefined(stylesheets) && stylesheets.length !== 0) {
         let hasScopedStyles = false;
         for (let i = 0; i < stylesheets.length; i++) {
+            // eslint-disable-next-line lwc-internal/no-invalid-todo
+            // TODO: figure out a better way to mark stylesheets as scoped, don't recalc this over and over
             if (isTrue((stylesheets[i] as any).$scoped$)) {
-                // temporary solution
                 hasScopedStyles = true;
                 break;
             }
