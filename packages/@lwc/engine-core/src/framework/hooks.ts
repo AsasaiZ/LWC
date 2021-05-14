@@ -99,6 +99,12 @@ enum LWCDOMMode {
 
 export function fallbackElmHook(elm: Element, vnode: VElement) {
     const { owner } = vnode;
+    if (!hasShadow(owner)) {
+        const token = owner.cmpTemplate?.stylesheetTokens?.shadowAttribute;
+        if (!isUndefined(token)) {
+            elm.classList.add(token);
+        }
+    }
     if (isTrue(owner.renderer.syntheticShadow)) {
         const {
             data: { context },
@@ -194,6 +200,12 @@ export function createViewModelHook(elm: HTMLElement, vnode: VCustomElement) {
     }
     const { sel, mode, ctor, owner } = vnode;
     const def = getComponentInternalDef(ctor);
+    if (!hasShadow(owner)) {
+        const token = owner.cmpTemplate?.stylesheetTokens?.shadowAttribute;
+        if (!isUndefined(token)) {
+            elm.classList.add(token);
+        }
+    }
     if (isTrue(owner.renderer.syntheticShadow)) {
         const { shadowAttribute } = owner.context;
         // when running in synthetic shadow mode, we need to set the shadowToken value

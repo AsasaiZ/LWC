@@ -15,6 +15,7 @@ export interface Config {
         /** Name of the module to resolve custom properties lookup */
         resolverModule?: string;
     };
+    scopeKey?: string;
 }
 
 export function transform(src: string, id: string, config: Config = {}): { code: string } {

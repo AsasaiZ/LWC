@@ -39,6 +39,10 @@ export default function serialize(result: Result, config: Config): string {
 
     let buffer = '';
 
+    if (config.scopeKey) {
+        buffer += '/* scopeKey ' + config.scopeKey + '*/\n';
+    }
+
     if (collectVarFunctions && useVarResolver) {
         buffer += `import ${VAR_RESOLVER_IDENTIFIER} from "${config.customProperties!
             .resolverModule!}";\n`;
@@ -57,9 +61,23 @@ export default function serialize(result: Result, config: Config): string {
 
     if (serializedStyle) {
         // inline function
-        buffer += `function stylesheet(${HOST_SELECTOR_IDENTIFIER}, ${SHADOW_SELECTOR_IDENTIFIER}, ${SHADOW_DOM_ENABLED_IDENTIFIER}) {\n`;
-        buffer += `  return ${serializedStyle};\n`;
-        buffer += `}\n`;
+        if (config.scopeKey) {
+            // light DOM scoped CSS, the string is always exactly the same
+            const stringifiedScopeKey = JSON.stringify(`.${config.scopeKey}`);
+            // eslint-disable-next-line lwc-internal/no-invalid-todo
+            // TODO: this could be made more efficient by just directly putting a string here
+            buffer += `function stylesheet() {\n`;
+            buffer += `var ${HOST_SELECTOR_IDENTIFIER} = ${stringifiedScopeKey};\n`;
+            buffer += `var ${SHADOW_SELECTOR_IDENTIFIER} = ${stringifiedScopeKey};\n`;
+            buffer += `var ${SHADOW_DOM_ENABLED_IDENTIFIER} = false;\n`;
+            buffer += `  return ${serializedStyle};\n`;
+            buffer += `}\n`;
+        } else {
+            // shadow DOM or non-scoped light DOM styles
+            buffer += `function stylesheet(${HOST_SELECTOR_IDENTIFIER}, ${SHADOW_SELECTOR_IDENTIFIER}, ${SHADOW_DOM_ENABLED_IDENTIFIER}) {\n`;
+            buffer += `  return ${serializedStyle};\n`;
+            buffer += `}\n`;
+        }
 
         // add import at the end
         stylesheetList.push(STYLESHEET_IDENTIFIER);

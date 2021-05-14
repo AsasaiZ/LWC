@@ -32,6 +32,17 @@ function isMixingJsAndTs(importerExt, importeeExt) {
     );
 }
 
+function parseQueryParamsForScopeKey(id) {
+    const [filename, query] = id.split('?', 2);
+    const params = query && new URLSearchParams(query);
+    const scopeKey = params && params.get('scopeKey');
+    return {
+        filename,
+        query,
+        scopeKey,
+    };
+}
+
 module.exports = function rollupLwcCompiler(pluginOptions = {}) {
     const { include, exclude } = pluginOptions;
     const filter = pluginUtils.createFilter(include, exclude);
@@ -48,7 +59,20 @@ module.exports = function rollupLwcCompiler(pluginOptions = {}) {
             customResolvedModules = [...userModules, ...DEFAULT_MODULES, { dir: customRootDir }];
         },
 
-        resolveId(importee, importer) {
+        async resolveId(importee, importer) {
+            const { filename, query, scopeKey } = parseQueryParamsForScopeKey(importee);
+            if (scopeKey) {
+                // handle light DOM scoped CSS
+                // Resolve without the query param. Use skipSelf to avoid infinite loops
+                const resolved = await this.resolve(filename, importer, { skipSelf: true });
+                if (resolved) {
+                    resolved.id += `?${query}`;
+                    return resolved;
+                } else {
+                    return null;
+                }
+            }
+
             // Normalize relative import to absolute import
             if (importee.startsWith('.') && importer) {
                 const importerExt = path.extname(importer);
@@ -84,6 +108,11 @@ module.exports = function rollupLwcCompiler(pluginOptions = {}) {
         },
 
         load(id) {
+            const { filename, scopeKey } = parseQueryParamsForScopeKey(id);
+            if (scopeKey) {
+                // override the default behavior, ignore the query param
+                return fs.readFileSync(filename, 'utf-8');
+            }
             if (id === IMPLICIT_DEFAULT_HTML_PATH) {
                 return EMPTY_IMPLICIT_HTML_CONTENT;
             }
@@ -104,6 +133,10 @@ module.exports = function rollupLwcCompiler(pluginOptions = {}) {
             // If we don't find the moduleId, just resolve the module name/namespace
             const moduleEntry = getModuleQualifiedName(id, mergedPluginOptions);
 
+            const { filename, scopeKey } = parseQueryParamsForScopeKey(id);
+            if (scopeKey) {
+                id = filename; // remove query param
+            }
             const { code, map } = await compiler.transform(src, id, {
                 mode: DEFAULT_MODE, // Use always default mode since any other (prod or compat) will be resolved later
                 name: moduleEntry.moduleName,
@@ -113,6 +146,7 @@ module.exports = function rollupLwcCompiler(pluginOptions = {}) {
                 stylesheetConfig: mergedPluginOptions.stylesheetConfig,
                 experimentalDynamicComponent: mergedPluginOptions.experimentalDynamicComponent,
                 preserveHtmlComments: mergedPluginOptions.preserveHtmlComments,
+                cssScopeKey: scopeKey,
             });
 
             return { code, map };

@@ -59,18 +59,24 @@ function serialize(
     { namespace, name }: NormalizedTransformOptions
 ): string {
     const cssRelPath = `./${path.basename(filename, path.extname(filename))}.css`;
+    const scopedCssRelPath = `./${path.basename(filename, path.extname(filename))}.scoped.css`;
     const scopingAttribute = `${namespace}-${name}_${path.basename(
         filename,
         path.extname(filename)
     )}`;
     let buffer = '';
     buffer += `import _implicitStylesheets from "${cssRelPath}";\n\n`;
+    buffer += `import _implicitScopedStylesheets from "${scopedCssRelPath}?scopeKey=${encodeURIComponent(
+        scopingAttribute
+    )}";\n\n`;
     buffer += code;
     buffer += '\n\n';
     buffer += 'if (_implicitStylesheets) {\n';
     buffer += `  tmpl.stylesheets.push.apply(tmpl.stylesheets, _implicitStylesheets)\n`;
     buffer += `}\n`;
-
+    buffer += 'if (_implicitScopedStylesheets) {\n';
+    buffer += `  tmpl.stylesheets.push.apply(tmpl.stylesheets, _implicitScopedStylesheets)\n`;
+    buffer += `}\n`;
     buffer += `tmpl.stylesheetTokens = {\n`;
     buffer += `  hostAttribute: "${scopingAttribute}-host",\n`;
     buffer += `  shadowAttribute: "${scopingAttribute}"\n`;
