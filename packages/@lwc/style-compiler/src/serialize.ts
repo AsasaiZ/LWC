@@ -39,10 +39,6 @@ export default function serialize(result: Result, config: Config): string {
 
     let buffer = '';
 
-    if (config.scopeKey) {
-        buffer += '/* scopeKey ' + config.scopeKey + '*/\n';
-    }
-
     if (collectVarFunctions && useVarResolver) {
         buffer += `import ${VAR_RESOLVER_IDENTIFIER} from "${config.customProperties!
             .resolverModule!}";\n`;
@@ -72,6 +68,7 @@ export default function serialize(result: Result, config: Config): string {
             buffer += `var ${SHADOW_DOM_ENABLED_IDENTIFIER} = false;\n`;
             buffer += `  return ${serializedStyle};\n`;
             buffer += `}\n`;
+            buffer += `stylesheet.$scoped$ = true;\n`; // temporary solution
         } else {
             // shadow DOM or non-scoped light DOM styles
             buffer += `function stylesheet(${HOST_SELECTOR_IDENTIFIER}, ${SHADOW_SELECTOR_IDENTIFIER}, ${SHADOW_DOM_ENABLED_IDENTIFIER}) {\n`;

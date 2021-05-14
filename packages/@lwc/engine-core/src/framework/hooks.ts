@@ -40,8 +40,19 @@ function setElementShadowToken(elm: Element, token: string | undefined) {
 
 function setLightDomScopingTokenIfNecessary(elm: Element, owner: VM) {
     const token = owner.cmpTemplate?.stylesheetTokens?.shadowAttribute;
-    if (!isUndefined(token)) {
-        owner.renderer.getClassList(elm).add(token);
+    const stylesheets = owner.cmpTemplate?.stylesheets;
+    if (!isUndefined(token) && !isUndefined(stylesheets) && stylesheets.length !== 0) {
+        let hasScopedStyles = false;
+        for (let i = 0; i < stylesheets.length; i++) {
+            if (isTrue((stylesheets[i] as any).$scoped$)) {
+                // temporary solution
+                hasScopedStyles = true;
+                break;
+            }
+        }
+        if (hasScopedStyles) {
+            owner.renderer.getClassList(elm).add(token);
+        }
     }
 }
 
