@@ -68,8 +68,6 @@ module.exports = function rollupLwcCompiler(pluginOptions = {}) {
                 if (resolved) {
                     resolved.id += `?${query}`;
                     return resolved;
-                } else {
-                    return null;
                 }
             }
 
@@ -108,20 +106,25 @@ module.exports = function rollupLwcCompiler(pluginOptions = {}) {
         },
 
         load(id) {
-            const { filename, scopeKey } = parseQueryParamsForScopeKey(id);
-            if (scopeKey) {
-                // override the default behavior, ignore the query param
-                return fs.readFileSync(filename, 'utf-8');
-            }
             if (id === IMPLICIT_DEFAULT_HTML_PATH) {
                 return EMPTY_IMPLICIT_HTML_CONTENT;
             }
 
-            const exists = fs.existsSync(id);
+            const { filename, scopeKey } = parseQueryParamsForScopeKey(id);
+            if (scopeKey) {
+                id = filename; // remove query param
+            }
+
             const isCSS = path.extname(id) === '.css';
 
-            if (!exists && isCSS) {
-                return '';
+            if (isCSS) {
+                const exists = fs.existsSync(id);
+                if (!exists) {
+                    return '';
+                } else if (scopeKey) {
+                    // load the file ourselves without the query param
+                    return fs.readFileSync(filename, 'utf-8');
+                }
             }
         },
 
