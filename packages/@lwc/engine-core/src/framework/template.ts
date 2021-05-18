@@ -18,7 +18,7 @@ import { logError } from '../shared/logger';
 import { VNode, VNodes } from '../3rdparty/snabbdom/types';
 import * as api from './api';
 import { RenderAPI } from './api';
-import { SlotSet, TemplateCache, VM, resetShadowRoot, runWithBoundaryProtection } from './vm';
+import { SlotSet, TemplateCache, VM, resetComponentRoot, runWithBoundaryProtection } from './vm';
 import { EmptyArray } from './utils';
 import { isTemplateRegistered } from './secure-template';
 import {
@@ -132,7 +132,7 @@ export function evaluateTemplate(vm: VM, html: Template): Array<VNode | null> {
                         // It is important to reset the content to avoid reusing similar elements
                         // generated from a different template, because they could have similar IDs,
                         // and snabbdom just rely on the IDs.
-                        resetShadowRoot(vm);
+                        resetComponentRoot(vm);
                     }
 
                     // Check that the template was built by the compiler.
