@@ -26,23 +26,32 @@ describe('Light DOM scoped CSS', () => {
         expect(otherComputed.fontFamily).toEqual('sans-serif');
     });
 
-    it('should work correctly with dynamic templates', () => {
+    it('should replace scoped styles correctly with dynamic templates', () => {
         const elm = createElement('x-switchable', { is: Switchable });
 
         document.body.appendChild(elm);
 
-        const getStyle = (elm) => {
-            const { backgroundColor, color } = getComputedStyle(elm);
-            return { backgroundColor, color };
-        };
-        expect(getStyle(elm)).toEqual({
-            backgroundColor: 'rgba(0, 0, 0, 0)',
-            color: 'rgb(0, 0, 0)',
-        });
+        const rafPromise = () => new Promise((resolve) => requestAnimationFrame(() => resolve()));
+
+        expect(getComputedStyle(elm).backgroundColor).toEqual('rgba(0, 0, 0, 0)');
+        expect(getComputedStyle(elm.querySelector('div')).color).toEqual('rgb(0, 0, 0)');
         elm.next();
-        expect(getStyle(elm)).toEqual({
-            backgroundColor: 'rgba(0, 0, 0, 0)',
-            color: 'rgb(0, 0, 0)',
-        });
+        return rafPromise()
+            .then(() => {
+                expect(getComputedStyle(elm).backgroundColor).toEqual('rgb(139, 69, 19)');
+                expect(getComputedStyle(elm.querySelector('div')).color).toEqual('rgb(255, 0, 0)');
+                elm.next();
+                return rafPromise();
+            })
+            .then(() => {
+                expect(getComputedStyle(elm).backgroundColor).toEqual('rgba(0, 0, 0, 0)');
+                expect(getComputedStyle(elm.querySelector('div')).color).toEqual('rgb(0, 0, 0)');
+                elm.next();
+                return rafPromise();
+            })
+            .then(() => {
+                expect(getComputedStyle(elm).backgroundColor).toEqual('rgb(255, 127, 80)');
+                expect(getComputedStyle(elm.querySelector('div')).color).toEqual('rgb(0, 0, 255)');
+            });
     });
 });
