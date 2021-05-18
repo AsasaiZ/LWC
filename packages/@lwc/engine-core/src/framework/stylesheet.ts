@@ -9,7 +9,7 @@ import { isArray, isUndefined, ArrayJoin, ArrayPush } from '@lwc/shared';
 import * as api from './api';
 import { VNode } from '../3rdparty/snabbdom/types';
 import { VM, hasShadow } from './vm';
-import { Template, TemplateStylesheetTokens } from './template';
+import { Template, TemplateStylesheetTokens, hasScopedStyles } from './template';
 import { getStyleOrSwappedStyle } from './hot-swaps';
 
 /**
@@ -40,6 +40,32 @@ function createInlineStyleVNode(content: string): VNode {
         },
         [api.t(content)]
     );
+}
+
+export function updateScopedLightDomTokens(vm: VM, template: Template) {
+    const { elm, context, renderer } = vm;
+    const { stylesheetTokens: newStylesheetTokens } = template;
+    let newTokens: TemplateStylesheetTokens | undefined;
+
+    // Reset the styling token applied to the host element.
+    const oldToken = context.shadowAttribute;
+    if (!isUndefined(oldToken)) {
+        renderer.getClassList(elm).remove(oldToken);
+    }
+
+    // Apply the new template styling token to the host element, if the new template has any
+    // associated stylesheets.
+    if (hasScopedStyles(template)) {
+        newTokens = newStylesheetTokens;
+    }
+
+    if (!isUndefined(newTokens)) {
+        renderer.getClassList(elm).add(newTokens.shadowAttribute);
+    }
+
+    // Update the styling tokens present on the context object.
+    context.hostAttribute = newTokens?.hostAttribute;
+    context.shadowAttribute = newTokens?.shadowAttribute;
 }
 
 export function updateSyntheticShadowAttributes(vm: VM, template: Template) {

@@ -1,6 +1,7 @@
 import { createElement, setFeatureFlagForTest } from 'lwc';
 import Basic from 'x/basic';
 import Other from 'x/other';
+import Switchable from 'x/switchable';
 
 describe('Light DOM scoped CSS', () => {
     beforeEach(() => {
@@ -23,5 +24,25 @@ describe('Light DOM scoped CSS', () => {
         expect(otherComputed.color).toEqual('rgb(0, 0, 0)');
         expect(otherComputed.backgroundColor).toEqual('rgb(255, 0, 0)');
         expect(otherComputed.fontFamily).toEqual('sans-serif');
+    });
+
+    it('should work correctly with dynamic templates', () => {
+        const elm = createElement('x-switchable', { is: Switchable });
+
+        document.body.appendChild(elm);
+
+        const getStyle = (elm) => {
+            const { backgroundColor, color } = getComputedStyle(elm);
+            return { backgroundColor, color };
+        };
+        expect(getStyle(elm)).toEqual({
+            backgroundColor: 'rgba(0, 0, 0, 0)',
+            color: 'rgb(0, 0, 0)',
+        });
+        elm.next();
+        expect(getStyle(elm)).toEqual({
+            backgroundColor: 'rgba(0, 0, 0, 0)',
+            color: 'rgb(0, 0, 0)',
+        });
     });
 });

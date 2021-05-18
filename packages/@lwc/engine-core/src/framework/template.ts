@@ -12,13 +12,22 @@ import {
     isArray,
     isFunction,
     isNull,
+    isTrue,
+    isUndefined,
     toString,
 } from '@lwc/shared';
 import { logError } from '../shared/logger';
 import { VNode, VNodes } from '../3rdparty/snabbdom/types';
 import * as api from './api';
 import { RenderAPI } from './api';
-import { SlotSet, TemplateCache, VM, resetComponentRoot, runWithBoundaryProtection } from './vm';
+import {
+    SlotSet,
+    TemplateCache,
+    VM,
+    resetComponentRoot,
+    runWithBoundaryProtection,
+    hasShadow,
+} from './vm';
 import { EmptyArray } from './utils';
 import { isTemplateRegistered } from './secure-template';
 import {
@@ -26,6 +35,7 @@ import {
     createStylesheet,
     getStylesheetsContent,
     updateSyntheticShadowAttributes,
+    updateScopedLightDomTokens,
 } from './stylesheet';
 import { logOperationStart, logOperationEnd, OperationId, trackProfilerState } from './profiler';
 import { getTemplateOrSwappedTemplate, setActiveVM } from './hot-swaps';
@@ -152,6 +162,8 @@ export function evaluateTemplate(vm: VM, html: Template): Array<VNode | null> {
                     // Update the synthetic shadow attributes on the host element if necessary.
                     if (renderer.syntheticShadow) {
                         updateSyntheticShadowAttributes(vm, html);
+                    } else if (!hasShadow(vm)) {
+                        updateScopedLightDomTokens(vm, html);
                     }
 
                     // Evaluate, create stylesheet and cache the produced VNode for future
@@ -200,4 +212,18 @@ export function evaluateTemplate(vm: VM, html: Template): Array<VNode | null> {
         );
     }
     return vnodes;
+}
+
+export function hasScopedStyles(template: Template | null): boolean {
+    const stylesheets = template?.stylesheets;
+    if (!isUndefined(stylesheets) && stylesheets.length !== 0) {
+        for (let i = 0; i < stylesheets.length; i++) {
+            // eslint-disable-next-line lwc-internal/no-invalid-todo
+            // TODO: figure out a better way to mark stylesheets as scoped, don't recalc this over and over
+            if (isTrue((stylesheets[i] as any).$scoped$)) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
